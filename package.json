@@ -1,0 +1,117 @@
+{
+  
+  "name": "e-act",
+  
+  "version": "1.4.269",
+  
+  "description": "Système de Gestion des États Civils",
+  
+  "main": "main.js",
+  
+  "build": {
+  
+    
+  "appId": "com.e-act.app",
+  
+    
+  "productName": "E-Act",
+  
+    
+  "asar": true,
+  
+    
+  "files": [
+  
+    
+    
+  "build/**/*",
+  
+    
+    
+  "main.js",
+  
+    
+    
+  "preload.js",
+  
+    
+    
+  "package.json"
+  
+    
+  ],
+  
+    
+  "nsis": {
+  
+    
+    
+  "oneClick": false,
+  
+    
+    
+  "perMachine": true,
+  
+    
+    
+  "allowToChangeInstallationDirectory": true
+  
+    
+  }
+  
+  },
+  
+  "scripts": {
+  
+    
+  "electron": "electron .",
+  
+    
+  "start:serve": "serve -s build",
+  
+    
+  "frontend": "cd frontend && npm run build",
+  
+    
+  "backend": "cd api/eneo && php artisan serve",
+  
+    
+  "start": "npm run frontend && npm run electron",
+  
+    
+  "package": "electron-packager . e-act --platform=win32 --arch=x64 --icon=assets/logo.ico --out=dist --overwrite",
+  
+    
+  "build": "react-scripts build",
+  
+    
+  "serve": "serve -s build",
+  
+    
+  "dist": "npm run build && electron-builder"
+  
+  },
+  
+  "devDependencies": {
+  
+    
+  "electron": "^37.2.5",
+  
+    
+  "electron-builder": "^26.0.12",
+  
+    
+  "electron-packager": "^17.1.2",
+  
+    
+  "serve": "^14.2.5"
+  
+  },
+  
+  "dependencies": {
+  
+    
+  "react-scripts": "^5.0.1"
+  
+  }
+}

@@ -1,0 +1,25 @@
+
+Résumé
+
+Au cours des dernières décennies, les pays africains, et particulièrement le Cameroun, ont été confrontés à de profondes mutations socio-économiques et technologiques. Dans ce contexte de modernisation, la gestion des données administratives est apparue comme l’un des piliers indispensables au développement. Cependant, un domaine reste encore marqué par de lourdes insuffisances : celui de l’état civil. En effet, malgré son rôle fondamental dans l’identification des citoyens et dans la planification des politiques publiques (santé, éducation, emploi, sécurité sociale), l’état civil souffre de dysfonctionnements persistants : enregistrements manuels sujets aux erreurs, retards de traitement, pertes de documents, absence de centralisation et faible sécurisation des archives.
+
+Le Cameroun, soucieux de renforcer la fiabilité et la traçabilité de ses services administratifs, a entrepris des réformes visant à moderniser et digitaliser ses systèmes. Cependant, dans de nombreuses communes, en particulier rurales, l’absence d’outils technologiques performants constitue encore un frein majeur. La mairie rurale de Bafoussam illustre parfaitement cette réalité : le traitement des actes de naissance, mariage et décès y demeure fastidieux, chronophage et peu sécurisé.
+
+C’est dans ce cadre que s’inscrit le présent travail de stage. L’objectif principal a été la conception et le déploiement d’un système de gestion informatisé des actes d’état civil, reposant sur des technologies modernes (Electron, React, Laravel, MySQL). Ce système permet d’automatiser l’enregistrement, la recherche, la consultation et l’archivage des actes, tout en garantissant leur sécurité et leur intégrité. Les avantages majeurs attendus sont l’amélioration de la qualité du service rendu aux citoyens, la réduction des délais de traitement, la fiabilité des données et la transparence administrative.
+
+Au-delà du cas spécifique de la mairie rurale de Bafoussam, cette solution ouvre la voie à une généralisation à l’échelle nationale et même régionale. En effet, sa mise en œuvre dans d’autres communes pourrait contribuer à l’édification d’une base de données centralisée et sécurisée de l’état civil camerounais, outil essentiel pour la gouvernance, la planification et la protection sociale. Ainsi, ce projet s’inscrit dans une dynamique plus large de modernisation du service public et de promotion de la transformation numérique en Afrique.
+
+
+---
+
+Abstract
+
+In recent decades, African countries, and Cameroon in particular, have faced profound socio-economic and technological transformations. Within this modernization process, the management of administrative data has emerged as a cornerstone for sustainable development. However, one area continues to suffer from persistent shortcomings: civil registration. Despite its vital role in citizen identification and in supporting public policies (health, education, employment, social security), civil registration remains plagued by challenges such as manual record-keeping prone to errors, processing delays, document loss, lack of centralization, and weak data security.
+
+Cameroon, aware of the importance of reliable and traceable administrative services, has undertaken reforms to modernize and digitalize its systems. Yet, in many municipalities, especially rural ones, the absence of robust technological tools remains a major obstacle. The rural council of Bafoussam provides a striking example: the management of birth, marriage, and death certificates is still time-consuming, inefficient, and insecure.
+
+This internship project was therefore designed with the aim of developing and deploying a computerized civil status management system using modern technologies (Electron, React, Laravel, MySQL). The proposed solution automates the registration, consultation, and archiving of civil records while ensuring their security and integrity. Its major benefits include improving service quality for citizens, reducing processing time, enhancing data reliability, and ensuring greater administrative transparency.
+
+Beyond the specific case of the rural council of Bafoussam, this solution paves the way for broader deployment at the national and regional levels. Its generalization could lead to the establishment of a centralized and secure civil registration database, which is essential for governance, planning, and social protection. In this sense, the project contributes not only to the modernization of the public sector in Cameroon but also to the broader agenda of digital transformation in Africa.
+
+
