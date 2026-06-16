@@ -70,4 +70,47 @@ class StatistiquesController extends Controller
                 ]),
         ]);
     }
+
+    public function analytique()
+    {
+        $year = Carbon::now()->year;
+
+        $mensuels = collect(range(1, 12))->map(fn($m) => [
+            'mois'    => Carbon::createFromDate(null, $m, 1)->locale('fr_FR')->shortMonthName,
+            'naiss'   => ActeNaissance::whereYear('created_at', $year)->whereMonth('created_at', $m)->count(),
+            'deces'   => ActeDeces::whereYear('created_at', $year)->whereMonth('created_at', $m)->count(),
+            'mariages'=> ActeMariage::whereYear('created_at', $year)->whereMonth('created_at', $m)->count(),
+        ]);
+
+        // Top secrétaires (toutes tables)
+        $allSec = collect();
+        foreach ([ActeNaissance::class, ActeDeces::class, ActeMariage::class] as $model) {
+            $model::selectRaw('secretaire, count(*) as total')
+                ->groupBy('secretaire')
+                ->get()
+                ->each(fn($r) => $allSec->push(['secretaire' => $r->secretaire, 'total' => $r->total]));
+        }
+        $topSecretaires = collect($allSec)
+            ->groupBy('secretaire')
+            ->map(fn($g, $k) => ['secretaire' => $k, 'total' => collect($g)->sum('total')])
+            ->sortByDesc('total')
+            ->take(10)
+            ->values();
+
+        $totalNaiss    = ActeNaissance::count();
+        $totalDeces    = ActeDeces::count();
+        $totalMariages = ActeMariage::count();
+
+        return response()->json([
+            'annee'          => $year,
+            'totaux'         => [
+                'naissances' => $totalNaiss,
+                'deces'      => $totalDeces,
+                'mariages'   => $totalMariages,
+                'ratio'      => $totalNaiss > 0 ? round(($totalDeces / $totalNaiss) * 100, 1) : 0,
+            ],
+            'mensuels'       => $mensuels,
+            'topSecretaires' => $topSecretaires,
+        ]);
+    }
 }

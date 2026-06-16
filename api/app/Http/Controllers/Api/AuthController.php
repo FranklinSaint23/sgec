@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -34,6 +33,9 @@ class AuthController extends Controller
         'role'     => $request->role,
     ]);
 
+    // Génère un vrai token API propre à cette session
+        $token = $user->createToken('api-token')->plainTextToken;
+
     // Cas d'ajout via interface admin (avec sexe et rôle fournis)
     if ($request->filled(['sexe', 'role'])) {
         return response()->json([
@@ -48,6 +50,7 @@ class AuthController extends Controller
         'status' => 'success',
         'message' => 'Inscription réussie',
         'user' => $user,
+        'token' => $token
     ]);
 }
 
@@ -69,16 +72,26 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Mise à jour après validation du mot de passe
         $user->update(['last_login_at' => now()]);
 
-        // Connexion "officielle" Laravel (Auditing va récupérer user_id / user_type)
-        Auth::login($user);
+        // Génère un vrai token API propre à cette session
+        $token = $user->createToken('api-token')->plainTextToken;
 
         return response()->json([
             'status' => 'success',
             'message' => 'Connexion réussie',
             'user' => $user,
+            'token' => $token,
+        ]);
+    }
+
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Déconnexion réussie',
         ]);
     }
 
@@ -152,3 +165,6 @@ class AuthController extends Controller
 
 
 }
+
+
+ 

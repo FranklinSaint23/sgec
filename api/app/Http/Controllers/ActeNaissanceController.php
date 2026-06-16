@@ -6,6 +6,7 @@ use App\Models\ActeNaissance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Services\DuplicateDetectionService;
 
 class ActeNaissanceController extends Controller
 {
@@ -43,10 +44,29 @@ class ActeNaissanceController extends Controller
             'acte_mariage' => 'sometimes|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
-        // Génération du numéro d’acte
-        $year = now()->year;
-        $count = ActeNaissance::whereYear('created_at', $year)->count() + 1;
-        $numero_acte = str_pad($count, 3, '0', STR_PAD_LEFT) . '/' . $year;
+        // 🔹 Vérification IA des doublons potentiels, avant toute création
+        $doublons = app(DuplicateDetectionService::class)->checkNaissance([
+            'nom' => $validated['nom'],
+            'date_naiss' => $validated['date_naiss'],
+            'nom_pere' => $validated['nom_pere'] ?? '',
+            'nom_mere' => $validated['nom_mere'] ?? '',
+        ]);
+
+        if (!empty($doublons) && !$request->boolean('force')) {
+            return response()->json([
+                'message' => 'Doublons potentiels détectés',
+                'doublons_potentiels' => $doublons,
+            ], 409);
+        }
+
+        // Génération du numéro d'acte : YYYY-NAI-NNNN
+        $year   = now()->year;
+        $prefix = $year . '-NAI-';
+        $last   = ActeNaissance::where('numero_acte', 'like', $prefix . '%')
+                    ->orderByRaw('CAST(SUBSTRING(numero_acte, ' . (strlen($prefix) + 1) . ') AS UNSIGNED) DESC')
+                    ->value('numero_acte');
+        $seq    = $last ? ((int) substr($last, strlen($prefix))) + 1 : 1;
+        $numero_acte = $prefix . str_pad($seq, 4, '0', STR_PAD_LEFT);
 
         // Upload fichiers
         $files = [];

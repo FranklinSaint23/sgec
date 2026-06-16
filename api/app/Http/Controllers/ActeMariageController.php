@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 use App\Models\ActeMariage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Services\DuplicateDetectionService;
+use App\Services\CrossCheckService;
 
 class ActeMariageController extends Controller
 {
@@ -76,10 +78,29 @@ class ActeMariageController extends Controller
             'acte_femme' => 'sometimes|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
-        // Génération automatique du numéro d’acte (XXX/année)
-        $year = date('Y');
-        $last = ActeMariage::whereYear('created_at', $year)->count() + 1;
-        $numero = str_pad($last, 3, '0', STR_PAD_LEFT) . '/' . $year;
+        // Détection de doublons IA
+        $doublons = app(DuplicateDetectionService::class)->checkMariage([
+            "nom_homme"       => $validated["nom_homme"] ?? "",
+            "nom_femme"       => $validated["nom_femme"] ?? "",
+            "date_naiss_homme" => $validated["date_naiss_homme"] ?? "",
+            "date_naiss_femme" => $validated["date_naiss_femme"] ?? "",
+        ]);
+
+        if (!empty($doublons) && !$request->boolean("force")) {
+            return response()->json([
+                "message"             => "Doublons potentiels détectés",
+                "doublons_potentiels" => $doublons,
+            ], 409);
+        }
+
+        // Génération du numéro d’acte : YYYY-MAR-NNNN
+        $year   = date("Y");
+        $prefix = $year . "-MAR-";
+        $lastRec = ActeMariage::where("numero_acte", "like", $prefix . "%")
+                    ->orderByRaw("CAST(SUBSTRING(numero_acte, " . (strlen($prefix) + 1) . ") AS UNSIGNED) DESC")
+                    ->value("numero_acte");
+        $seq    = $lastRec ? ((int) substr($lastRec, strlen($prefix))) + 1 : 1;
+        $numero = $prefix . str_pad($seq, 4, "0", STR_PAD_LEFT);
 
         // Gestion des fichiers
         $paths = [];
@@ -106,10 +127,22 @@ class ActeMariageController extends Controller
             $paths
         ));
 
+        // Vérification croisée époux/épouse avec actes de naissance
+        $crossCheck = app(CrossCheckService::class);
+        $verifHomme = $crossCheck->checkNaissanceExists(
+            $validated['nom_homme'] ?? '',
+            $validated['date_naiss_homme'] ?? null
+        );
+        $verifFemme = $crossCheck->checkNaissanceExists(
+            $validated['nom_femme'] ?? '',
+            $validated['date_naiss_femme'] ?? null
+        );
+
         return response()->json([
-            'message' => 'Acte de mariage créé avec succès ',
-            'numero_acte' => $acte->numero_acte,
-            'data' => $acte
+            'message'      => 'Acte de mariage créé avec succès',
+            'numero_acte'  => $acte->numero_acte,
+            'verif_croisee'=> ['epoux' => $verifHomme, 'epouse' => $verifFemme],
+            'data'         => $acte,
         ], 201);
     }
 

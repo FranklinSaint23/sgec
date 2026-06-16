@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\ActeDeces;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Services\DuplicateDetectionService;
+use App\Services\CrossCheckService;
 
 class ActeDecesController extends Controller
 {
@@ -37,10 +39,28 @@ class ActeDecesController extends Controller
             'acte_naissance_decede' => 'sometimes|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
-        // Génération du numéro
-        $year = date('Y');
-        $last = ActeDeces::whereYear('created_at', $year)->count() + 1;
-        $numero = str_pad($last, 3, '0', STR_PAD_LEFT) . '/' . $year;
+        // Détection de doublons IA
+        $doublons = app(DuplicateDetectionService::class)->checkDeces([
+            'nom_decede' => $validated['nom_decede'],
+            'date_deces' => $validated['date_deces'],
+            'lieu_deces' => $validated['lieu_deces'] ?? '',
+        ]);
+
+        if (!empty($doublons) && !$request->boolean('force')) {
+            return response()->json([
+                'message'             => 'Doublons potentiels détectés',
+                'doublons_potentiels' => $doublons,
+            ], 409);
+        }
+
+        // Génération du numéro d'acte : YYYY-DEC-NNNN
+        $year   = date('Y');
+        $prefix = $year . '-DEC-';
+        $lastRec = ActeDeces::where('numero_acte', 'like', $prefix . '%')
+                    ->orderByRaw('CAST(SUBSTRING(numero_acte, ' . (strlen($prefix) + 1) . ') AS UNSIGNED) DESC')
+                    ->value('numero_acte');
+        $seq    = $lastRec ? ((int) substr($lastRec, strlen($prefix))) + 1 : 1;
+        $numero = $prefix . str_pad($seq, 4, '0', STR_PAD_LEFT);
 
         // Upload fichiers
         $paths = [];
@@ -64,10 +84,17 @@ class ActeDecesController extends Controller
             $paths
         ));
 
+        // Vérification croisée avec les actes de naissance
+        $verifCroisee = app(CrossCheckService::class)->checkNaissanceExists(
+            $validated['nom_decede'],
+            $validated['date_naiss_decede'] ?? null
+        );
+
         return response()->json([
-            'message' => 'Acte de décès enregistré avec succès',
-            'numero_acte' => $acte->numero_acte,
-            'data' => $acte
+            'message'      => 'Acte de décès enregistré avec succès',
+            'numero_acte'  => $acte->numero_acte,
+            'verif_croisee'=> $verifCroisee,
+            'data'         => $acte,
         ], 201);
     }
 
