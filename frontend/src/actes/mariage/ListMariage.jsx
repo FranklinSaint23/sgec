@@ -161,7 +161,7 @@ function ListMariage() {
       body: dataFiltre.map((row) => [
         row.numero_acte,
         row.nom_homme,
-        row.date_femme,
+        row.nom_femme,
         row.contracte_le,
       ]),
     });

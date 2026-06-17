@@ -64,9 +64,9 @@ export default function Carte() {
   }, []);
 
   const SHAPE_LAYERS = {
-    regions:          { file: '/regions_cmr.geojson',          label: 'Régions',          color: '#6366f1' },
-    departements:     { file: '/departements_cmr.geojson',     label: 'Départements',     color: '#0ea5e9' },
-    arrondissements:  { file: '/arrondissements_cmr.geojson',  label: 'Arrondissements',  color: '#10b981' },
+    regions:          { file: `${process.env.PUBLIC_URL}/regions_cmr.geojson`,          label: 'Régions',          color: '#6366f1' },
+    departements:     { file: `${process.env.PUBLIC_URL}/departements_cmr.geojson`,     label: 'Départements',     color: '#0ea5e9' },
+    arrondissements:  { file: `${process.env.PUBLIC_URL}/arrondissements_cmr.geojson`,  label: 'Arrondissements',  color: '#10b981' },
   };
 
   const [activeLayer,  setActiveLayer]  = useState('regions');

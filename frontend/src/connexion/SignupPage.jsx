@@ -225,7 +225,7 @@ function SignupPage() {
     <div className='bg-light min-vh-100 d-flex align-items-center justify-content-center'>
       <div className={`auth-wrapper ${isSignIn ? 'sign-in-mode' : ''} shadow-xs`}>
         <div className="image-panel text-overlay">
-          <img src="/assets/e-act.png" alt="background" />
+          <img src={`${process.env.PUBLIC_URL}/assets/e-act.png`} alt="background" />
           
         </div>
 

@@ -176,10 +176,10 @@ function ListNaiss() {
       head: [["N° Acte", "Nom de l'enfant", "Date de naissance", "Sexe", "Dressé le"]],
       body: dataFiltre.map((row) => [
         row.numero_acte,
-        row.nom_decede,
-        row.date_deces,
+        row.nom,
+        row.date_naiss,
         row.sexe === "M" ? "Masculin" : "Féminin",
-        row.dresse_le,
+        row.dresse,
       ]),
     });
     

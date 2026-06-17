@@ -100,7 +100,7 @@ function Dashboard() {
 
         {/* Logo */}
         <div className="ea-sidebar-logo">
-          <img src="/assets/e-act.png" alt="logo" onError={(e) => { e.target.style.display = 'none'; }} />
+          <img src={`${process.env.PUBLIC_URL}/assets/e-act.png`} alt="logo" onError={(e) => { e.target.style.display = 'none'; }} />
           {!collapsed && (
             <div className="ea-logo-text">
               <span className="e">E</span>-<span className="ac">AC</span><span className="t">T</span>

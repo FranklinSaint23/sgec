@@ -20,6 +20,8 @@ function createWindow() {
   if (isDev) {
     win.loadURL('http://localhost:3000');
   } else {
+    // app.isPackaged → __dirname = resources/app/ (asar)
+    // les fichiers inclus dans "files" sont à la racine du asar
     win.loadFile(path.join(__dirname, 'frontend', 'build', 'index.html'));
   }
 }
