@@ -97,7 +97,7 @@ class ActeMariageController extends Controller
         $year   = date("Y");
         $prefix = $year . "-MAR-";
         $lastRec = ActeMariage::where("numero_acte", "like", $prefix . "%")
-                    ->orderByRaw("CAST(SUBSTRING(numero_acte, " . (strlen($prefix) + 1) . ") AS UNSIGNED) DESC")
+                    ->orderByRaw("CAST(SUBSTRING(numero_acte FROM " . (strlen($prefix) + 1) . ") AS INTEGER) DESC")
                     ->value("numero_acte");
         $seq    = $lastRec ? ((int) substr($lastRec, strlen($prefix))) + 1 : 1;
         $numero = $prefix . str_pad($seq, 4, "0", STR_PAD_LEFT);
@@ -137,6 +137,15 @@ class ActeMariageController extends Controller
             $validated['nom_femme'] ?? '',
             $validated['date_naiss_femme'] ?? null
         );
+
+        if ($request->filled('latitude') && $request->filled('longitude')) {
+            $lat = (float) $request->input('latitude');
+            $lng = (float) $request->input('longitude');
+            DB::statement(
+                "UPDATE actes_mariage SET coordonnees = ST_MakePoint(?, ?)::geography WHERE id = ?",
+                [$lng, $lat, $acte->id]
+            );
+        }
 
         return response()->json([
             'message'      => 'Acte de mariage créé avec succès',

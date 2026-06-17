@@ -16,6 +16,7 @@ use App\Http\Controllers\OCRController;
 use App\Http\Controllers\AnomalieController;
 use App\Http\Controllers\LibelleController;
 use App\Http\Controllers\MentionMarginaleController;
+use App\Http\Controllers\CarteController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']); 
@@ -68,6 +69,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/mentions', [MentionMarginaleController::class, 'index']);
     Route::post('/mentions', [MentionMarginaleController::class, 'store']);
     Route::delete('/mentions/{id}', [MentionMarginaleController::class, 'destroy']);
+
+    // Carte PostGIS
+    Route::get('/carte/tous', [CarteController::class, 'tous']);
+    Route::get('/carte/naissances', [CarteController::class, 'naissances']);
+    Route::get('/carte/deces', [CarteController::class, 'deces']);
+    Route::get('/carte/mariages', [CarteController::class, 'mariages']);
+    Route::get('/carte/proximite', [CarteController::class, 'proximite']);
 
     // Réservé au rôle admin
     Route::middleware('role:admin')->group(function () {

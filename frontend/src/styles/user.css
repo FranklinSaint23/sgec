@@ -1,0 +1,17 @@
+.dropdown-menu {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.dropdown-item {
+  border-radius: 8px;
+  transition: all 0.2s ease-in-out;
+}
+
+.dropdown-item:hover {
+  background-color: #d0dbe7; /* gris clair */
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

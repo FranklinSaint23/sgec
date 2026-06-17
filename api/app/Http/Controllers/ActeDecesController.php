@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ActeDeces;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use App\Services\DuplicateDetectionService;
 use App\Services\CrossCheckService;
 
@@ -57,7 +58,7 @@ class ActeDecesController extends Controller
         $year   = date('Y');
         $prefix = $year . '-DEC-';
         $lastRec = ActeDeces::where('numero_acte', 'like', $prefix . '%')
-                    ->orderByRaw('CAST(SUBSTRING(numero_acte, ' . (strlen($prefix) + 1) . ') AS UNSIGNED) DESC')
+                    ->orderByRaw('CAST(SUBSTRING(numero_acte FROM ' . (strlen($prefix) + 1) . ') AS INTEGER) DESC')
                     ->value('numero_acte');
         $seq    = $lastRec ? ((int) substr($lastRec, strlen($prefix))) + 1 : 1;
         $numero = $prefix . str_pad($seq, 4, '0', STR_PAD_LEFT);
@@ -89,6 +90,15 @@ class ActeDecesController extends Controller
             $validated['nom_decede'],
             $validated['date_naiss_decede'] ?? null
         );
+
+        if ($request->filled('latitude') && $request->filled('longitude')) {
+            $lat = (float) $request->input('latitude');
+            $lng = (float) $request->input('longitude');
+            DB::statement(
+                "UPDATE actes_deces SET coordonnees = ST_MakePoint(?, ?)::geography WHERE id = ?",
+                [$lng, $lat, $acte->id]
+            );
+        }
 
         return response()->json([
             'message'      => 'Acte de décès enregistré avec succès',

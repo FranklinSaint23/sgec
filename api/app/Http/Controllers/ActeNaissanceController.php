@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ActeNaissance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Services\DuplicateDetectionService;
 
@@ -63,7 +64,7 @@ class ActeNaissanceController extends Controller
         $year   = now()->year;
         $prefix = $year . '-NAI-';
         $last   = ActeNaissance::where('numero_acte', 'like', $prefix . '%')
-                    ->orderByRaw('CAST(SUBSTRING(numero_acte, ' . (strlen($prefix) + 1) . ') AS UNSIGNED) DESC')
+                    ->orderByRaw('CAST(SUBSTRING(numero_acte FROM ' . (strlen($prefix) + 1) . ') AS INTEGER) DESC')
                     ->value('numero_acte');
         $seq    = $last ? ((int) substr($last, strlen($prefix))) + 1 : 1;
         $numero_acte = $prefix . str_pad($seq, 4, '0', STR_PAD_LEFT);
@@ -88,6 +89,16 @@ class ActeNaissanceController extends Controller
             ],
             $files
         ));
+
+        // Coordonnées GPS optionnelles
+        if ($request->filled('latitude') && $request->filled('longitude')) {
+            $lat = (float) $request->input('latitude');
+            $lng = (float) $request->input('longitude');
+            DB::statement(
+                "UPDATE actes_naissance SET coordonnees = ST_MakePoint(?, ?)::geography WHERE id = ?",
+                [$lng, $lat, $acte->id]
+            );
+        }
 
         return response()->json([
             'message' => 'Acte de naissance enregistré avec succès !',
