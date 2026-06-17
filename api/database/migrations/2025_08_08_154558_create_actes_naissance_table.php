@@ -41,10 +41,10 @@ return new class extends Migration {
             $table->string('officier');
 
             // Fichiers
-            $table->string('cni_pere')->sometimes();
-            $table->string('cni_mere')->sometimes();
-            $table->string('certificat_naissance')->sometimes();
-            $table->string('acte_mariage')->sometimes();
+            $table->string('cni_pere')->nullable();
+            $table->string('cni_mere')->nullable();
+            $table->string('certificat_naissance')->nullable();
+            $table->string('acte_mariage')->nullable();
 
             $table->timestamps();
         });

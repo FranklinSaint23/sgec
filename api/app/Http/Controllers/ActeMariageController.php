@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\ActeMariage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use App\Services\DuplicateDetectionService;
 use App\Services\CrossCheckService;
 

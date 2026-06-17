@@ -27,7 +27,7 @@ class AnomalieController extends Controller
             $volumes = $check['model']::whereBetween('created_at', [$ilYaUneHeure, $maintenant])
                 ->selectRaw('secretaire, count(*) as total')
                 ->groupBy('secretaire')
-                ->having('total', '>=', $seuil)
+                ->havingRaw('count(*) >= ?', [$seuil])
                 ->get();
 
             foreach ($volumes as $v) {

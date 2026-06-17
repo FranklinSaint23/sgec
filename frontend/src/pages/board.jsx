@@ -34,16 +34,25 @@ function StatCard({ icon, iconClass, label, value, sub }) {
   );
 }
 
+const SEVERITE = {
+  haute:   { cls: "danger",  icon: "bi-exclamation-octagon-fill" },
+  moyenne: { cls: "warning", icon: "bi-exclamation-triangle-fill" },
+  basse:   { cls: "info",    icon: "bi-info-circle-fill" },
+};
+
 function Board() {
   const userName  = localStorage.getItem("userName") || "Utilisateur";
   const userRole  = localStorage.getItem("userRole") || "";
-  const [stats, setStats]           = useState(null);
+  const [stats, setStats]             = useState(null);
   const [latestActes, setLatestActes] = useState([]);
+  const [anomalies, setAnomalies]     = useState([]);
+  const [anomDismissed, setAnomDismissed] = useState(false);
   const today = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
   useEffect(() => {
     api.get("/dashboard-stats").then((r) => setStats(r.data)).catch(() => {});
     api.get("/actes/latest").then((r) => setLatestActes(r.data)).catch(() => {});
+    api.get("/anomalies").then((r) => setAnomalies(r.data.anomalies || [])).catch(() => {});
   }, []);
 
   const barData = {
@@ -78,6 +87,30 @@ function Board() {
 
   return (
     <div>
+      {/* Anomalies */}
+      {!anomDismissed && anomalies.length > 0 && (
+        <div className="mb-3">
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <span className="fw-bold text-danger">
+              <i className="bi bi-shield-exclamation me-2"></i>
+              {anomalies.length} anomalie{anomalies.length > 1 ? 's' : ''} détectée{anomalies.length > 1 ? 's' : ''}
+            </span>
+            <button className="btn btn-sm btn-outline-secondary" onClick={() => setAnomDismissed(true)}>
+              <i className="bi bi-x"></i> Ignorer
+            </button>
+          </div>
+          {anomalies.map((a, i) => {
+            const s = SEVERITE[a.severite] || SEVERITE.basse;
+            return (
+              <div key={i} className={`alert alert-${s.cls} py-2 px-3 mb-2 d-flex align-items-start gap-2`} style={{ fontSize: 13 }}>
+                <i className={`bi ${s.icon} mt-1`}></i>
+                <span>{a.message}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* Welcome Banner */}
       <div className="ea-welcome">
         <div style={{ position: 'relative', zIndex: 1 }}>

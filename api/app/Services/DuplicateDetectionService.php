@@ -6,6 +6,7 @@ use App\Models\ActeNaissance;
 use App\Models\ActeMariage;
 use App\Models\ActeDeces;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\ConnectionException;
 
 class DuplicateDetectionService
 {
@@ -20,17 +21,17 @@ class DuplicateDetectionService
             return [];
         }
 
-        $response = Http::timeout(5)->post(config('services.ai_microservice.url') . '/detect-duplicate/naissance', [
-            'nouvel_acte' => $nouvelActe,
-            'candidats' => $candidats->toArray(),
-            'seuil' => 0.80,
-        ]);
-
-        if ($response->failed()) {
-            return []; // on n'empêche jamais la saisie si l'IA est indisponible
+        try {
+            $response = Http::timeout(5)->post(config('services.ai_microservice.url') . '/detect-duplicate/naissance', [
+                'nouvel_acte' => $nouvelActe,
+                'candidats' => $candidats->toArray(),
+                'seuil' => 0.80,
+            ]);
+            if ($response->failed()) return [];
+            return $response->json('doublons_potentiels', []);
+        } catch (ConnectionException) {
+            return [];
         }
-
-        return $response->json('doublons_potentiels', []);
     }
 
     public function checkMariage(array $nouvelActe): array
@@ -42,15 +43,17 @@ class DuplicateDetectionService
 
         if ($candidats->isEmpty()) return [];
 
-        $response = Http::timeout(5)->post(config('services.ai_microservice.url') . '/detect-duplicate/mariage', [
-            'nouvel_acte' => $nouvelActe,
-            'candidats'   => $candidats->toArray(),
-            'seuil'       => 0.80,
-        ]);
-
-        if ($response->failed()) return [];
-
-        return $response->json('doublons_potentiels', []);
+        try {
+            $response = Http::timeout(5)->post(config('services.ai_microservice.url') . '/detect-duplicate/mariage', [
+                'nouvel_acte' => $nouvelActe,
+                'candidats'   => $candidats->toArray(),
+                'seuil'       => 0.80,
+            ]);
+            if ($response->failed()) return [];
+            return $response->json('doublons_potentiels', []);
+        } catch (ConnectionException) {
+            return [];
+        }
     }
 
     public function checkDeces(array $nouvelActe): array
@@ -62,14 +65,16 @@ class DuplicateDetectionService
 
         if ($candidats->isEmpty()) return [];
 
-        $response = Http::timeout(5)->post(config('services.ai_microservice.url') . '/detect-duplicate/deces', [
-            'nouvel_acte' => $nouvelActe,
-            'candidats'   => $candidats->toArray(),
-            'seuil'       => 0.80,
-        ]);
-
-        if ($response->failed()) return [];
-
-        return $response->json('doublons_potentiels', []);
+        try {
+            $response = Http::timeout(5)->post(config('services.ai_microservice.url') . '/detect-duplicate/deces', [
+                'nouvel_acte' => $nouvelActe,
+                'candidats'   => $candidats->toArray(),
+                'seuil'       => 0.80,
+            ]);
+            if ($response->failed()) return [];
+            return $response->json('doublons_potentiels', []);
+        } catch (ConnectionException) {
+            return [];
+        }
     }
 }

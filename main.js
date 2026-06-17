@@ -10,18 +10,16 @@ function createWindow() {
     icon: path.join(__dirname, 'assets', 'logo.ico'),
     title: 'e-act',
     webPreferences: {
-      nodeIntegration: false,   // reste false pour la sécurité
-      contextIsolation: true,   // obligatoire avec preload
+      nodeIntegration: false,
+      contextIsolation: true,
       devTools: isDev,
-      preload: path.join(__dirname, 'preload.js') // 🔥 ajout ici
+      preload: path.join(__dirname, 'preload.js')
     }
   });
 
   if (isDev) {
     win.loadURL('http://localhost:3000');
   } else {
-    // app.isPackaged → __dirname = resources/app/ (asar)
-    // les fichiers inclus dans "files" sont à la racine du asar
     win.loadFile(path.join(__dirname, 'frontend', 'build', 'index.html'));
   }
 }

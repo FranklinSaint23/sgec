@@ -6,7 +6,7 @@ contextBridge.exposeInMainWorld('electron', {
   sendMessage: (channel, data) => {
     ipcRenderer.send(channel, data);
   },
-  
+
   // Exemple : écouter un message venant du process principal
   onMessage: (channel, callback) => {
     ipcRenderer.on(channel, (event, ...args) => callback(...args));
