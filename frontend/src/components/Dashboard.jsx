@@ -41,7 +41,7 @@ const PAGE_TITLES = {
   list_mariage: 'Actes de mariage', edit_mariage: 'Modifier mariage', copie_mariage: 'Duplicata — Mariage',
   mentions: 'Mentions marginales', historique: 'Historique', statistiques: 'Statistiques',
   sauvegarde: 'Sauvegarde & Export', profil: 'Mon profil', analytique_ia: 'Analytique IA',
-  carte: 'Carte des actes — Bafoussam',
+  carte: 'Carte géographique des actes — Cameroun',
 };
 
 function Dashboard() {

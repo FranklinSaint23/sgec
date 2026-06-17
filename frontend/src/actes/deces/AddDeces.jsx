@@ -4,6 +4,7 @@ import api from "../../services/api";
 import { validerDeces } from "../../utils/validationCoherence";
 import OCRUploader from "../../components/OCRUploader";
 import LocationPicker from "../../components/LocationPicker";
+import CascadeLocation from "../../components/CascadeLocation";
 
 function AddDeces() {
   const [step, setStep] = useState(1);
@@ -108,38 +109,16 @@ function AddDeces() {
         return (
           <>
             <h5>📝 Informations administratives</h5>
-            <div className="row mb-3">
-              <div className="col-md-6">
-                <label>Province</label>
-                <select className="form-control" name="province" value={formData.province || ''} onChange={handleChange}>
-                    <option value="Ouest" selected>Ouest</option>
-                </select>
-              </div>
-              <div className="col-md-6">
-                <label>Département</label>
-                <select className="form-control" name="departement" value={formData.departement || ''} onChange={handleChange} >
-                  <option value="Mifi" selected disabled>Mifi</option>
-                </select>
-              </div>
-            </div>
-            <div className="row mb-3">
-              <div className="col-md-6">
-                <label>Arrondissement</label>
-                <select className="form-control" name="arrondissement" value={formData.arrondissement || ''} onChange={handleChange} >
-                    <option value="Bafoussam I" selected disabled>Bafoussam I</option>
-                </select>
-              </div>
-              <div className="col-md-6">
-                <label>Centre d’état civil</label>
-                <select className="form-control" name="centre" value={formData.centre || ''} onChange={handleChange} >
-                  <option value="Mairie Rurale de Bafoussam 1er" selected disabled>Mairie Rurale de Bafoussam 1er</option>
-                </select>
-              </div>
+            <div className="mb-3">
+              <CascadeLocation
+                values={{ province: formData.province, departement: formData.departement, arrondissement: formData.arrondissement, centre: formData.centre }}
+                onChange={(loc) => setFormData(prev => ({ ...prev, ...loc }))}
+              />
             </div>
             <div className="row mb-3">
               <div className="col-md-12">
                 <label>Déclaration de</label>
-                <input type="text" name="declaration" placeholder='Sur déclaration de...' className="form-control" value={formData.declaration || ''} onChange={handleChange} required />
+                <input type="text" name="declaration" placeholder="Sur déclaration de..." className="form-control" value={formData.declaration || ""} onChange={handleChange} required />
               </div>
             </div>
             <div className="row mb-3">
@@ -162,7 +141,6 @@ function AddDeces() {
                 </select>
               </div>
             </div>
-            
           </>
         );
       case 2:

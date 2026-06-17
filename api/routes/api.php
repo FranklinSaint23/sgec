@@ -76,6 +76,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/carte/deces', [CarteController::class, 'deces']);
     Route::get('/carte/mariages', [CarteController::class, 'mariages']);
     Route::get('/carte/proximite', [CarteController::class, 'proximite']);
+    Route::get('/carte/stats', [CarteController::class, 'stats']);
 
     // Réservé au rôle admin
     Route::middleware('role:admin')->group(function () {

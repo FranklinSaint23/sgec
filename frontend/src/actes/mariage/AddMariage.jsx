@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { validerMariage } from "../../utils/validationCoherence";
 import OCRUploader from "../../components/OCRUploader";
 import LocationPicker from "../../components/LocationPicker";
+import CascadeLocation from "../../components/CascadeLocation";
 
 function AddMariage() {
   const [step, setStep] = useState(1);
@@ -111,40 +112,18 @@ function AddMariage() {
         return (
           <>
             <h5>📝 Informations administratives</h5>
-            <div className="row mb-3">
-              <div className="col-md-6">
-                <label>Province</label>
-                <select className="form-control" name="province" value={formData.province || ''} onChange={handleChange}>
-                  <option value="Ouest" selected disabled>Ouest</option>
-                </select>
-              </div>
-              <div className="col-md-6">
-                <label>Département</label>
-                <select className="form-control" name="departement" value={formData.departement || ''} onChange={handleChange}>
-                  <option value="Mifi" selected disabled>Mifi</option>
-                </select>
-              </div>
-            </div>
-            <div className="row mb-3">
-              <div className="col-md-6">
-                <label>Arrondissement</label>
-                <select className="form-control" name="arrondissement" value={formData.arrondissement || ''} onChange={handleChange}>
-                  <option value="Bafoussam I" selected disabled>Bafoussam I</option>
-                </select>
-              </div>
-              <div className="col-md-6">
-                <label>Centre d’état civil</label>
-                <select className="form-control" name="centre" value={formData.centre || ''} onChange={handleChange}>
-                  <option value="Mairie Rurale de Bafoussam 1er" selected disabled>Mairie Rurale de Bafoussam 1er</option>
-                </select>
-              </div>
+            <div className="mb-3">
+              <CascadeLocation
+                values={{ province: formData.province, departement: formData.departement, arrondissement: formData.arrondissement, centre: formData.centre }}
+                onChange={(loc) => setFormData(prev => ({ ...prev, ...loc }))}
+              />
             </div>
             <label>Date de célébration</label>
-            <input type="datetime-local" name="celebre_le" className="form-control mb-2" value={formData.celebre_le || ''} onChange={handleChange} />
+            <input type="datetime-local" name="celebre_le" className="form-control mb-2" value={formData.celebre_le || ""} onChange={handleChange} />
             <LocationPicker
               value={formData.latitude ? { lat: formData.latitude, lng: formData.longitude } : null}
               onChange={handleLocationChange}
-              cityHint="Bafoussam"
+              cityHint={formData.arrondissement || ""}
               label="Localiser le lieu de mariage sur la carte"
             />
           </>

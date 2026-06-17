@@ -148,6 +148,42 @@ class CarteController extends Controller
         ]);
     }
 
+    public function stats()
+    {
+        $naissance = DB::scalar("SELECT COUNT(*) FROM actes_naissance WHERE coordonnees IS NOT NULL");
+        $deces     = DB::scalar("SELECT COUNT(*) FROM actes_deces     WHERE coordonnees IS NOT NULL");
+        $mariage   = DB::scalar("SELECT COUNT(*) FROM actes_mariage   WHERE coordonnees IS NOT NULL");
+
+        // Densité par zone géographique (~11 km²) — arrondi à 1 décimale
+        $zones = DB::select("
+            SELECT
+                ROUND(ST_Y(coordonnees::geometry)::numeric, 1) AS lat_zone,
+                ROUND(ST_X(coordonnees::geometry)::numeric, 1) AS lng_zone,
+                type,
+                COUNT(*) AS total
+            FROM (
+                SELECT coordonnees, 'naissance' AS type FROM actes_naissance WHERE coordonnees IS NOT NULL
+                UNION ALL
+                SELECT coordonnees, 'deces'     AS type FROM actes_deces     WHERE coordonnees IS NOT NULL
+                UNION ALL
+                SELECT coordonnees, 'mariage'   AS type FROM actes_mariage   WHERE coordonnees IS NOT NULL
+            ) combined
+            GROUP BY lat_zone, lng_zone, type
+            ORDER BY total DESC
+            LIMIT 50
+        ");
+
+        return response()->json([
+            'totaux' => [
+                'naissance' => (int) $naissance,
+                'deces'     => (int) $deces,
+                'mariage'   => (int) $mariage,
+                'total'     => (int) $naissance + (int) $deces + (int) $mariage,
+            ],
+            'zones' => $zones,
+        ]);
+    }
+
     private function toGeoJSON(array $actes): array
     {
         $features = array_map(function ($acte) {

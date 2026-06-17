@@ -8,28 +8,52 @@ use Carbon\Carbon;
 
 class ActesSeeder extends Seeder
 {
-    // Coordonnées GPS autour de Bafoussam (Mifi, Ouest-Cameroun)
-    // Centre : 5.4764°N, 10.1594°E
+    // Coordonnées GPS par ville/quartier
+    // Naissances : Bafoussam quartiers + Foumban, Mbouda, Yaoundé (Nlongkak), Douala (Akwa)
     private array $coordsNaissance = [
-        [10.1712, 5.4821], [10.1523, 5.4701], [10.1890, 5.4889],
-        [10.1634, 5.4650], [10.1450, 5.4910], [10.2010, 5.5021],
-        [10.1380, 5.4580], [10.1750, 5.5100], [10.1600, 5.4450],
-        [10.1920, 5.4780], [10.1510, 5.5050], [10.1680, 5.4720],
-        [10.1840, 5.4960], [10.1430, 5.4830], [10.1760, 5.4660],
+        [10.1678, 5.4812], // MBARGA   → Bafoussam - Djeleng
+        [10.1823, 5.4923], // TAGNE    → Bafoussam - Nylon
+        [10.9000, 5.7167], // NKOA     → Foumban centre
+        [10.1534, 5.4701], // FEUDJIO  → Bafoussam - Famla
+        [10.1612, 5.4634], // KAMGA    → Bafoussam - Kamkop
+        [10.2833, 5.6333], // TCHOUAMO → Mbouda centre
+        [10.1456, 5.5023], // WAMBA    → Bafoussam - Banengo
+        [11.5087, 3.8623], // NJOCK    → Yaoundé - Nlongkak
+        [10.1789, 5.4567], // BIYONG   → Bafoussam - Tougang
+        [9.7212,  4.0523], // SIMO     → Douala - Akwa
+        [10.1512, 5.4489], // DONGMO   → Bafoussam - Tamdja
+        [10.1723, 5.4890], // KENFACK  → Bafoussam - Ngwa
+        [10.1594, 5.4764], // NGOUFO   → Bafoussam - Centre
+        [10.1850, 5.4600], // TAPTUE   → Bafoussam - Koptchou
+        [10.1400, 5.4720], // NKENGNE  → Bafoussam - Sabga
     ];
 
+    // Décès : Yaoundé (Bastos, Mfoundi), Douala (Bonanjo), reste Bafoussam quartiers
     private array $coordsDeces = [
-        [10.1650, 5.4750], [10.1720, 5.4810], [10.1580, 5.4680],
-        [10.1900, 5.5000], [10.1490, 5.4620], [10.1810, 5.4870],
-        [10.1560, 5.4930], [10.1780, 5.4560], [10.1670, 5.5080],
-        [10.1540, 5.4770],
+        [10.1678, 5.4812], // FOTSO    → Bafoussam - Djeleng
+        [11.5178, 3.8712], // YOMBI    → Yaoundé - Bastos
+        [10.1534, 5.4701], // TCHOUMI  → Bafoussam - Famla
+        [9.7023,  4.0611], // MEZUI    → Douala - Bonanjo
+        [10.1456, 5.5023], // KEMAJOU  → Bafoussam - Banengo
+        [10.1789, 5.4567], // DONFACK  → Bafoussam - Tougang
+        [10.1512, 5.4489], // TSAFACK  → Bafoussam - Tamdja
+        [11.5123, 3.8516], // BELLA    → Yaoundé - Mfoundi
+        [10.1723, 5.4890], // NGOH     → Bafoussam - Ngwa
+        [10.1594, 5.4764], // KANA     → Bafoussam - Centre
     ];
 
+    // Mariages : tous à Bafoussam, différents quartiers
     private array $coordsMariage = [
-        [10.1640, 5.4800], [10.1730, 5.4740], [10.1590, 5.4910],
-        [10.1870, 5.4830], [10.1470, 5.4690], [10.1820, 5.5010],
-        [10.1610, 5.4640], [10.1760, 5.4950], [10.1520, 5.4860],
-        [10.1900, 5.4720],
+        [10.1678, 5.4812], // KAMGA/NKOA     → Djeleng
+        [10.1823, 5.4923], // TAGNE/FOUDA    → Nylon
+        [10.1534, 5.4701], // BIYA/BELLA     → Famla
+        [10.1612, 5.4634], // DONGMO/SIMO    → Kamkop
+        [10.1456, 5.5023], // WAMBA/ATANGANA → Banengo
+        [10.1789, 5.4567], // NJOCK/KEMAJOU  → Tougang
+        [10.1512, 5.4489], // FEUDJIO/TSAFACK→ Tamdja
+        [10.1723, 5.4890], // KENGNE/MVOGO   → Ngwa
+        [10.1594, 5.4764], // MBARGA/NKENGNE → Centre
+        [10.1850, 5.4600], // FOTSO/DONFACK  → Koptchou
     ];
 
     public function run(): void
