@@ -31,10 +31,12 @@ export default function Carte() {
   const [geoStats,       setGeoStats]       = useState(null);
   const [statsOpen,      setStatsOpen]      = useState(false);
   const [heatmap,        setHeatmap]        = useState(false);
-  const [shapeData,      setShapeData]      = useState(null);
+  const [shapeData,      setShapeData]      = useState({});
   const [shapeVisible,   setShapeVisible]   = useState(false);
   const [shapeLoading,   setShapeLoading]   = useState(false);
   const [shapeError,     setShapeError]     = useState('');
+  const [zoneStats,      setZoneStats]      = useState({});   // { regions: {nom: {total,naissance,...}} }
+  const [choroplType,    setChoroplType]    = useState('total'); // total|naissance|deces|mariage
   const [search,         setSearch]         = useState('');
   const [rayon,          setRayon]          = useState(5000);
   const [proxMode,       setProxMode]       = useState(false);
@@ -61,38 +63,98 @@ export default function Carte() {
       .finally(() => setLoading(false));
   }, []);
 
-  const loadShapefiles = async () => {
-    if (shapeData) { setShapeVisible(v => !v); return; }
+  const SHAPE_LAYERS = {
+    regions:          { file: '/regions_cmr.geojson',          label: 'Régions',          color: '#6366f1' },
+    departements:     { file: '/departements_cmr.geojson',     label: 'Départements',     color: '#0ea5e9' },
+    arrondissements:  { file: '/arrondissements_cmr.geojson',  label: 'Arrondissements',  color: '#10b981' },
+  };
+
+  const [activeLayer,  setActiveLayer]  = useState('regions');
+
+  const loadShapefiles = async (layer = activeLayer) => {
+    // Si même couche active et déjà chargée → toggle visibilité
+    if (layer === activeLayer && shapeData[layer]) {
+      setShapeVisible(v => !v);
+      return;
+    }
+    setActiveLayer(layer);
     setShapeLoading(true);
     setShapeError('');
     try {
-      // GeoJSON des régions du Cameroun — GADM niveau 1 (simplifié)
-      const url = 'https://raw.githubusercontent.com/datasets/geo-boundaries-world-110m/master/countries.geojson';
-      // Utiliser les données GADM Cameroun niveau 1
-      const res = await fetch('https://geodata.ucdavis.edu/gadm/gadm4.1/json/gadm41_CMR_1.json');
-      if (!res.ok) throw new Error('Fichier non disponible');
-      const data = await res.json();
-      setShapeData(data);
+      // Charger GeoJSON et stats en parallèle
+      const [geoRes, statsRes] = await Promise.all([
+        shapeData[layer] ? Promise.resolve(null) : fetch(SHAPE_LAYERS[layer].file),
+        zoneStats[layer]  ? Promise.resolve(null) : api.get('/carte/stats-par-zone', { params: { niveau: layer } }),
+      ]);
+
+      if (geoRes) {
+        if (!geoRes.ok) throw new Error('Fichier GeoJSON introuvable');
+        const data = await geoRes.json();
+        setShapeData(prev => ({ ...prev, [layer]: data }));
+      }
+
+      if (statsRes) {
+        // Indexer par nom de zone pour accès O(1)
+        const idx = {};
+        (statsRes.data.zones || []).forEach(z => { idx[z.nom] = z; });
+        setZoneStats(prev => ({ ...prev, [layer]: { index: idx, max: statsRes.data.max || 1 } }));
+      }
+
       setShapeVisible(true);
-    } catch {
-      setShapeError('Impossible de charger les limites (connexion requise). Placer le fichier gadm41_CMR_1.json dans public/');
+    } catch (e) {
+      setShapeError(`Impossible de charger ${SHAPE_LAYERS[layer].label} : ${e.message}`);
     } finally {
       setShapeLoading(false);
     }
   };
 
-  const shapeStyle = useCallback((feature) => ({
-    fillColor: '#6366f1',
-    fillOpacity: 0.08,
-    color: '#6366f1',
-    weight: 1.5,
-    dashArray: '4 3',
-  }), []);
+  // Interpolation de couleur blanche → couleur de la couche selon intensité 0-1
+  const interpolateColor = (intensity, baseColor) => {
+    const hex = baseColor.replace('#', '');
+    const r = parseInt(hex.slice(0,2), 16);
+    const g = parseInt(hex.slice(2,4), 16);
+    const b = parseInt(hex.slice(4,6), 16);
+    const ri = Math.round(255 + (r - 255) * intensity);
+    const gi = Math.round(255 + (g - 255) * intensity);
+    const bi = Math.round(255 + (b - 255) * intensity);
+    return `rgb(${ri},${gi},${bi})`;
+  };
 
-  const onEachRegion = useCallback((feature, layer) => {
-    const name = feature.properties?.NAME_1 || feature.properties?.name || '';
-    if (name) layer.bindTooltip(name, { permanent: false, direction: 'center', className: 'region-tooltip' });
-  }, []);
+  const shapeStyle = useCallback((feature) => {
+    const p        = feature?.properties || {};
+    const nomZone  = p.nom_arr || p.nom_dep || p.nom_reg || '';
+    const baseColor = SHAPE_LAYERS[activeLayer]?.color || '#6366f1';
+    const stats    = zoneStats[activeLayer];
+    let fillOpacity = 0.1;
+    let fillColor   = baseColor;
+
+    if (stats && nomZone) {
+      const z    = stats.index[nomZone];
+      const val  = z ? (z[choroplType] ?? z.total ?? 0) : 0;
+      const maxV = stats.max || 1;
+      const intensity = val > 0 ? 0.15 + (val / maxV) * 0.75 : 0.04;
+      fillColor   = interpolateColor(intensity, baseColor);
+      fillOpacity = val > 0 ? 0.75 : 0.08;
+    }
+
+    return { fillColor, fillOpacity, color: baseColor, weight: 1.2, dashArray: '4 3' };
+  }, [activeLayer, zoneStats, choroplType]);
+
+  const onEachFeature = useCallback((feature, leafletLayer) => {
+    const p       = feature.properties || {};
+    const nomZone = p.nom_arr || p.nom_dep || p.nom_reg || '';
+    const sub     = p.nom_arr ? ` — ${p.nom_dep || ''}` : (p.nom_dep ? ` — ${p.nom_reg || ''}` : '');
+    const stats   = zoneStats[activeLayer]?.index?.[nomZone];
+
+    let tooltip = `<strong>${nomZone}</strong>${sub}`;
+    if (stats) {
+      tooltip += `<br><span style="color:#22c55e">Naissances : ${stats.naissance}</span>`;
+      tooltip += `<br><span style="color:#ef4444">Décès : ${stats.deces}</span>`;
+      tooltip += `<br><span style="color:#f59e0b">Mariages : ${stats.mariage}</span>`;
+      tooltip += `<br><strong>Total : ${stats.total}</strong>`;
+    }
+    leafletLayer.bindTooltip(tooltip, { permanent: false, direction: 'center', sticky: true });
+  }, [activeLayer, zoneStats]);
 
   const loadGeoStats = () => {
     if (geoStats) { setStatsOpen(o => !o); return; }
@@ -198,18 +260,39 @@ export default function Carte() {
           {heatmap ? 'Densité' : 'Points'}
         </button>
 
-        {/* Shapefiles */}
-        <button
-          className={`btn btn-sm ${shapeVisible ? 'btn-primary' : 'btn-outline-primary'}`}
-          onClick={loadShapefiles}
-          disabled={shapeLoading}
-          title="Limites administratives"
-        >
-          {shapeLoading
-            ? <><span className="spinner-border spinner-border-sm me-1"></span>Chargement…</>
-            : <><i className="bi bi-map-fill me-1"></i>Limites régions</>
-          }
-        </button>
+        {/* Shapefiles + choroplèthe */}
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap', background: '#f8fafc', borderRadius: 8, padding: '4px 8px', border: '1px solid #e2e8f0' }}>
+          <span style={{ fontSize: '.75rem', color: '#94a3b8', marginRight: 2 }}>Limites :</span>
+          {Object.entries(SHAPE_LAYERS).map(([key, cfg]) => (
+            <button key={key}
+              className={`btn btn-sm ${shapeVisible && activeLayer === key ? 'btn-primary' : 'btn-outline-secondary'}`}
+              style={{ fontSize: '.78rem', padding: '2px 10px' }}
+              onClick={() => loadShapefiles(key)}
+              disabled={shapeLoading}
+              title={`Afficher les ${cfg.label}`}
+            >
+              {shapeLoading && activeLayer === key
+                ? <span className="spinner-border spinner-border-sm"></span>
+                : cfg.label}
+            </button>
+          ))}
+
+          {/* Sélecteur type choroplèthe — visible quand une couche est active */}
+          {shapeVisible && (
+            <>
+              <span style={{ fontSize: '.75rem', color: '#94a3b8', margin: '0 4px' }}>par :</span>
+              {[['total','Total'],['naissance','Naissances'],['deces','Décès'],['mariage','Mariages']].map(([v, lbl]) => (
+                <button key={v}
+                  className={`btn btn-sm ${choroplType === v ? 'btn-dark' : 'btn-outline-secondary'}`}
+                  style={{ fontSize: '.75rem', padding: '2px 8px' }}
+                  onClick={() => setChoroplType(v)}
+                >
+                  {lbl}
+                </button>
+              ))}
+            </>
+          )}
+        </div>
 
         {/* Stats géo */}
         <button
@@ -320,13 +403,13 @@ export default function Carte() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
-          {/* Couche shapefiles régions */}
-          {shapeVisible && shapeData && (
+          {/* Couche shapefiles choroplèthe */}
+          {shapeVisible && shapeData?.[activeLayer] && (
             <GeoJSON
-              key="regions-cmr"
-              data={shapeData}
+              key={`${activeLayer}-${choroplType}-${zoneStats[activeLayer]?.max ?? 0}`}
+              data={shapeData[activeLayer]}
               style={shapeStyle}
-              onEachFeature={onEachRegion}
+              onEachFeature={onEachFeature}
             />
           )}
 

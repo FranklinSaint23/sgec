@@ -148,6 +148,99 @@ class CarteController extends Controller
         ]);
     }
 
+    public function statsParZone(Request $request)
+    {
+        $request->validate([
+            'niveau' => 'required|in:regions,departements,arrondissements',
+            'type'   => 'sometimes|in:naissance,deces,mariage',
+        ]);
+
+        $niveau = $request->niveau;
+        $type   = $request->type;
+
+        $table  = 'zones_' . $niveau;
+        $nomCol = match($niveau) {
+            'regions'          => 'nom_reg',
+            'departements'     => 'nom_dep',
+            'arrondissements'  => 'nom_arr',
+        };
+        $parentCol = match($niveau) {
+            'regions'          => 'null as parent',
+            'departements'     => 'z.nom_reg as parent',
+            'arrondissements'  => 'z.nom_dep as parent',
+        };
+
+        $counts = [];
+
+        if (!$type || $type === 'naissance') {
+            $rows = DB::select("
+                SELECT z.{$nomCol} as nom, {$parentCol},
+                       COUNT(a.id) as total
+                FROM {$table} z
+                LEFT JOIN actes_naissance a
+                       ON a.coordonnees IS NOT NULL
+                      AND ST_Within(a.coordonnees::geometry, z.geom)
+                GROUP BY z.{$nomCol}" . ($niveau !== 'regions' ? ", z.nom_reg" : "") . ($niveau === 'arrondissements' ? ", z.nom_dep" : "")
+            );
+            foreach ($rows as $r) {
+                $counts[$r->nom]['nom']       = $r->nom;
+                $counts[$r->nom]['parent']    = $r->parent ?? null;
+                $counts[$r->nom]['naissance'] = (int) $r->total;
+            }
+        }
+
+        if (!$type || $type === 'deces') {
+            $rows = DB::select("
+                SELECT z.{$nomCol} as nom, {$parentCol},
+                       COUNT(a.id) as total
+                FROM {$table} z
+                LEFT JOIN actes_deces a
+                       ON a.coordonnees IS NOT NULL
+                      AND ST_Within(a.coordonnees::geometry, z.geom)
+                GROUP BY z.{$nomCol}" . ($niveau !== 'regions' ? ", z.nom_reg" : "") . ($niveau === 'arrondissements' ? ", z.nom_dep" : "")
+            );
+            foreach ($rows as $r) {
+                $counts[$r->nom]['nom']    = $r->nom;
+                $counts[$r->nom]['parent'] = $r->parent ?? null;
+                $counts[$r->nom]['deces']  = (int) $r->total;
+            }
+        }
+
+        if (!$type || $type === 'mariage') {
+            $rows = DB::select("
+                SELECT z.{$nomCol} as nom, {$parentCol},
+                       COUNT(a.id) as total
+                FROM {$table} z
+                LEFT JOIN actes_mariage a
+                       ON a.coordonnees IS NOT NULL
+                      AND ST_Within(a.coordonnees::geometry, z.geom)
+                GROUP BY z.{$nomCol}" . ($niveau !== 'regions' ? ", z.nom_reg" : "") . ($niveau === 'arrondissements' ? ", z.nom_dep" : "")
+            );
+            foreach ($rows as $r) {
+                $counts[$r->nom]['nom']     = $r->nom;
+                $counts[$r->nom]['parent']  = $r->parent ?? null;
+                $counts[$r->nom]['mariage'] = (int) $r->total;
+            }
+        }
+
+        // Calculer le total et trier
+        $result = array_values(array_map(function ($z) {
+            $z['naissance'] = $z['naissance'] ?? 0;
+            $z['deces']     = $z['deces']     ?? 0;
+            $z['mariage']   = $z['mariage']   ?? 0;
+            $z['total']     = $z['naissance'] + $z['deces'] + $z['mariage'];
+            return $z;
+        }, $counts));
+
+        usort($result, fn($a, $b) => $b['total'] <=> $a['total']);
+
+        return response()->json([
+            'niveau'  => $niveau,
+            'zones'   => $result,
+            'max'     => $result[0]['total'] ?? 0,
+        ]);
+    }
+
     public function stats()
     {
         $naissance = DB::scalar("SELECT COUNT(*) FROM actes_naissance WHERE coordonnees IS NOT NULL");
