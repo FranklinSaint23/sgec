@@ -21,7 +21,7 @@ function Logout() {
     }, 3000);
 
     const redirectTimer = setTimeout(() => {
-      window.location.reload();
+      navigate('/');
     }, 5000);
 
     return () => {
