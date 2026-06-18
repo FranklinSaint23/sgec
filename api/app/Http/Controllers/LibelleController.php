@@ -14,36 +14,42 @@ class LibelleController extends Controller
             'data' => 'required|array',
         ]);
 
-        $apiKey = config('services.anthropic.api_key');
-        $model  = config('services.anthropic.model', 'claude-sonnet-4-6');
-        $type   = $request->type;
-        $data   = $request->data;
-        $dataJson = json_encode($data, JSON_UNESCAPED_UNICODE);
+        $apiKey   = config('services.groq.api_key');
+        $model    = config('services.groq.model');
+        $type     = $request->type;
+        $dataJson = json_encode($request->data, JSON_UNESCAPED_UNICODE);
+
+        $system = "Tu es un officier d'état civil camerounais expert en rédaction d'actes officiels selon la loi camerounaise N°2011/011.";
 
         $prompts = [
-            'naissance' => "Tu es un officier d'état civil camerounais expert. Rédige le libellé officiel d'un ACTE DE NAISSANCE en français juridique formel, selon la loi camerounaise N°2011/011. Commence par «L'an deux mille...» et inclus toutes les mentions légales. Données de l'acte : {$dataJson}. 150 à 200 mots, style officiel.",
-            'mariage'   => "Tu es un officier d'état civil camerounais expert. Rédige le libellé officiel d'un ACTE DE MARIAGE en français juridique formel, selon la loi camerounaise. Commence par «L'an deux mille...». Données : {$dataJson}. 150 à 200 mots.",
-            'deces'     => "Tu es un officier d'état civil camerounais expert. Rédige le libellé officiel d'un ACTE DE DÉCÈS en français juridique formel, selon la loi camerounaise. Commence par «L'an deux mille...». Données : {$dataJson}. 150 à 200 mots.",
+            'naissance' => "Rédige le libellé officiel d'un ACTE DE NAISSANCE en français juridique formel. Commence par «L'an deux mille...» et inclus toutes les mentions légales. Données : {$dataJson}. Entre 150 et 200 mots, style officiel.",
+            'mariage'   => "Rédige le libellé officiel d'un ACTE DE MARIAGE en français juridique formel. Commence par «L'an deux mille...». Données : {$dataJson}. Entre 150 et 200 mots.",
+            'deces'     => "Rédige le libellé officiel d'un ACTE DE DÉCÈS en français juridique formel. Commence par «L'an deux mille...». Données : {$dataJson}. Entre 150 et 200 mots.",
         ];
 
-        $response = Http::withOptions([
-            'curl' => [CURLOPT_RESOLVE => ['api.anthropic.com:443:160.79.104.10']],
-        ])->withHeaders([
-            'x-api-key'         => $apiKey,
-            'anthropic-version' => '2023-06-01',
-            'content-type'      => 'application/json',
-        ])->timeout(30)->post('https://api.anthropic.com/v1/messages', [
-            'model'      => $model,
-            'max_tokens' => 600,
-            'messages'   => [['role' => 'user', 'content' => $prompts[$type]]],
-        ]);
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type'  => 'application/json',
+            ])->timeout(30)->post('https://api.groq.com/openai/v1/chat/completions', [
+                'model'      => $model,
+                'max_tokens' => 600,
+                'messages'   => [
+                    ['role' => 'system', 'content' => $system],
+                    ['role' => 'user',   'content' => $prompts[$type]],
+                ],
+            ]);
 
-        if ($response->failed()) {
-            return response()->json(['error' => 'Erreur génération libellé.'], 502);
+            if ($response->failed()) {
+                return response()->json(['error' => 'Erreur génération libellé.'], 502);
+            }
+
+            return response()->json([
+                'libelle' => $response->json('choices.0.message.content', ''),
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Erreur réseau : ' . $e->getMessage()], 500);
         }
-
-        return response()->json([
-            'libelle' => $response->json('content.0.text', ''),
-        ]);
     }
 }

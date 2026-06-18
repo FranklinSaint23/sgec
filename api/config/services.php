@@ -35,9 +35,10 @@ return [
         'url' => env('AI_MICROSERVICE_URL', 'http://127.0.0.1:8001'),
     ],
 
-    'anthropic' => [
-        'api_key' => env('ANTHROPIC_API_KEY', ''),
-        'model'   => env('ANTHROPIC_MODEL', 'claude-sonnet-4-6'),
+    'groq' => [
+        'api_key'       => env('GROQ_API_KEY', ''),
+        'model'         => env('GROQ_MODEL', 'llama-3.3-70b-versatile'),
+        'model_vision'  => env('GROQ_MODEL_VISION', 'meta-llama/llama-4-scout-17b-16e-instruct'),
     ],
 
 ];

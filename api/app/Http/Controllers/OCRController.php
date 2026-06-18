@@ -15,46 +15,46 @@ class OCRController extends Controller
             'type'         => 'required|string|in:cni,acte',
         ]);
 
-        $apiKey = config('services.anthropic.api_key');
-        $model  = config('services.anthropic.model', 'claude-sonnet-4-6');
+        $apiKey = config('services.groq.api_key');
+        $model  = config('services.groq.model_vision');
 
         $prompt = $request->type === 'cni'
             ? "Tu es un système OCR expert pour les CNI camerounaises. Extrais les informations de cette image et retourne UNIQUEMENT un objet JSON valide avec les clés: nom (nom complet en majuscules), date_naiss (format YYYY-MM-DD ou null), lieu_naiss (lieu de naissance ou null), sexe (M ou F ou null). Si une information est illisible, mets null. Réponds uniquement avec le JSON, aucun texte autour."
             : "Tu es un système OCR expert pour les actes d'état civil camerounais. Extrais les informations et retourne UNIQUEMENT un objet JSON avec: nom, date_naiss (YYYY-MM-DD), lieu_naiss. Réponds uniquement avec le JSON.";
 
-        $response = Http::withOptions([
-            'curl' => [CURLOPT_RESOLVE => ['api.anthropic.com:443:160.79.104.10']],
-        ])->withHeaders([
-            'x-api-key'         => $apiKey,
-            'anthropic-version' => '2023-06-01',
-            'content-type'      => 'application/json',
-        ])->timeout(30)->post('https://api.anthropic.com/v1/messages', [
-            'model'      => $model,
-            'max_tokens' => 256,
-            'messages'   => [[
-                'role'    => 'user',
-                'content' => [
-                    [
-                        'type'   => 'image',
-                        'source' => [
-                            'type'       => 'base64',
-                            'media_type' => $request->media_type,
-                            'data'       => $request->image_base64,
+        try {
+            $imageUrl = 'data:' . $request->media_type . ';base64,' . $request->image_base64;
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type'  => 'application/json',
+            ])->timeout(30)->post('https://api.groq.com/openai/v1/chat/completions', [
+                'model'      => $model,
+                'max_tokens' => 256,
+                'messages'   => [[
+                    'role'    => 'user',
+                    'content' => [
+                        [
+                            'type'      => 'image_url',
+                            'image_url' => ['url' => $imageUrl],
                         ],
+                        ['type' => 'text', 'text' => $prompt],
                     ],
-                    ['type' => 'text', 'text' => $prompt],
-                ],
-            ]],
-        ]);
+                ]],
+            ]);
 
-        if ($response->failed()) {
-            return response()->json(['error' => 'Service OCR indisponible.'], 502);
+            if ($response->failed()) {
+                return response()->json(['error' => 'Service OCR indisponible.'], 502);
+            }
+
+            $text = $response->json('choices.0.message.content', '{}');
+            preg_match('/\{.*\}/s', $text, $matches);
+            $data = json_decode($matches[0] ?? '{}', true) ?? [];
+
+            return response()->json($data);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Erreur OCR : ' . $e->getMessage()], 500);
         }
-
-        $text = $response->json('content.0.text', '{}');
-        preg_match('/\{.*\}/s', $text, $matches);
-        $data = json_decode($matches[0] ?? '{}', true) ?? [];
-
-        return response()->json($data);
     }
 }

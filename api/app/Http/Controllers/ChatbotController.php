@@ -11,48 +11,40 @@ class ChatbotController extends Controller
     {
         $request->validate(['message' => 'required|string|max:1000']);
 
-        $apiKey = config('services.anthropic.api_key');
-        $model  = config('services.anthropic.model');
+        $apiKey = config('services.groq.api_key');
+        $model  = config('services.groq.model');
 
         if (empty($apiKey)) {
-            return response()->json(['error' => 'Clé API Anthropic non configurée.'], 500);
+            return response()->json(['error' => 'Clé API Groq non configurée.'], 500);
         }
 
-        $systemPrompt = <<<PROMPT
-Tu es un assistant expert en état civil au Cameroun, intégré dans le logiciel E-ACT de gestion des actes d'état civil.
-Tu aides les officiers d'état civil et secrétaires avec :
-- Les procédures de déclaration de naissance, mariage et décès
-- Les délais légaux et pièces justificatives requises
-- Les règles du Code Civil camerounais relatives à l'état civil
-- L'utilisation du logiciel E-ACT
-
-Réponds de façon concise, pratique et professionnelle en français. Si tu ne sais pas, dis-le clairement.
-PROMPT;
+        $systemPrompt = "Tu es un assistant expert en état civil au Cameroun, intégré dans le logiciel E-ACT de gestion des actes d'état civil. "
+            . "Tu aides les officiers d'état civil et secrétaires avec : "
+            . "les procédures de déclaration de naissance, mariage et décès, "
+            . "les délais légaux et pièces justificatives requises, "
+            . "les règles du Code Civil camerounais relatives à l'état civil, "
+            . "et l'utilisation du logiciel E-ACT. "
+            . "Réponds de façon concise, pratique et professionnelle en français. Si tu ne sais pas, dis-le clairement.";
 
         try {
-            $response = Http::withOptions([
-                'curl' => [
-                    CURLOPT_RESOLVE => ['api.anthropic.com:443:160.79.104.10'],
-                ],
-            ])->withHeaders([
-                'x-api-key'         => $apiKey,
-                'anthropic-version' => '2023-06-01',
-                'content-type'      => 'application/json',
-            ])->post('https://api.anthropic.com/v1/messages', [
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type'  => 'application/json',
+            ])->timeout(30)->post('https://api.groq.com/openai/v1/chat/completions', [
                 'model'      => $model,
                 'max_tokens' => 512,
-                'system'     => $systemPrompt,
                 'messages'   => [
-                    ['role' => 'user', 'content' => $request->message],
+                    ['role' => 'system', 'content' => $systemPrompt],
+                    ['role' => 'user',   'content' => $request->message],
                 ],
             ]);
 
             if ($response->failed()) {
-                $errMsg = $response->json('error.message', 'Erreur API Anthropic.');
+                $errMsg = $response->json('error.message', 'Erreur API Groq.');
                 return response()->json(['error' => $errMsg], 502);
             }
 
-            $content = $response->json('content.0.text', '');
+            $content = $response->json('choices.0.message.content', '');
             return response()->json(['reply' => $content]);
 
         } catch (\Exception $e) {
