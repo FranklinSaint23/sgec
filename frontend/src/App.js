@@ -32,15 +32,16 @@ window.addEventListener("error", function (event) {
   }
 });
 
+function LoginGuard() {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  return token ? <Navigate to="/dashboard" replace /> : <SignupPage />;
+}
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={
-          (localStorage.getItem('token') || sessionStorage.getItem('token'))
-            ? <Navigate to="/dashboard" replace />
-            : <SignupPage />
-        } />
+        <Route path="/" element={<LoginGuard />} />
         <Route
           path="/dashboard"
           element={
