@@ -9,20 +9,12 @@ function Logout() {
   const [phase, setPhase] = useState('loading');
 
   useEffect(() => {
-    const deconnecter = async () => {
-      try {
-        await api.post('/logout');
-      } catch (err) {
-        // Le token était peut-être déjà expiré/invalide côté serveur,
-        // on continue quand même le nettoyage local
-        console.error(err);
-      }
+    // Vider le storage immédiatement avant tout le reste
+    const keys = ['token', 'userEmail', 'userName', 'userRole', 'userId', 'userCreatedAt', 'rememberMe'];
+    keys.forEach(k => { localStorage.removeItem(k); sessionStorage.removeItem(k); });
 
-      const keys = ['token', 'userEmail', 'userName', 'userRole', 'userId', 'userCreatedAt', 'rememberMe'];
-      keys.forEach(k => { localStorage.removeItem(k); sessionStorage.removeItem(k); });
-    };
-
-    deconnecter();
+    // Appel API en arrière-plan (pas besoin d'attendre)
+    api.post('/logout').catch(() => {});
 
     const loadingTimer = setTimeout(() => {
       setPhase('done');
