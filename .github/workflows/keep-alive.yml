@@ -1,0 +1,30 @@
+name: Keep Render alive
+
+on:
+  schedule:
+    - cron: '*/14 * * * *'   # toutes les 14 min (Render dort après 15 min)
+  workflow_dispatch:           # déclenchement manuel possible
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping sgec-api
+        run: |
+          curl -sf https://sgec-api.onrender.com/api/ping \
+            --max-time 30 \
+            --retry 2 \
+            --retry-delay 5 \
+            -o /dev/null \
+            && echo "sgec-api: OK" \
+            || echo "sgec-api: no response (normal si premier réveil)"
+
+      - name: Ping sgec-ai
+        run: |
+          curl -sf https://sgec-ai.onrender.com/docs \
+            --max-time 30 \
+            --retry 2 \
+            --retry-delay 5 \
+            -o /dev/null \
+            && echo "sgec-ai: OK" \
+            || echo "sgec-ai: no response (normal si premier réveil)"

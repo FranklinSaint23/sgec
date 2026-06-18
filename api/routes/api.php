@@ -2,6 +2,8 @@
 
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/ping', fn() => response()->json(['status' => 'ok']));
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\ActeNaissanceController;
 use App\Http\Controllers\ActeMariageController;
