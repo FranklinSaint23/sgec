@@ -1,0 +1,55 @@
+services:
+  # ─── Laravel API ────────────────────────────────────────────────
+  - type: web
+    name: sgec-api
+    runtime: docker
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: ./api
+    plan: free
+    envVars:
+      - key: APP_NAME
+        value: E-ACT
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        sync: false        # à renseigner dans le dashboard Render
+      - key: APP_URL
+        fromService:
+          type: web
+          name: sgec-api
+          property: host
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        sync: false        # URL Supabase (à renseigner)
+      - key: DB_PORT
+        value: 5432
+      - key: DB_DATABASE
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: GROQ_MODEL_VISION
+        value: meta-llama/llama-4-scout-17b-16e-instruct
+      - key: AI_MICROSERVICE_URL
+        fromService:
+          type: web
+          name: sgec-ai
+          property: host
+      - key: CORS_ALLOWED_ORIGINS
+        value: "*"
+
+  # ─── FastAPI AI ─────────────────────────────────────────────────
+  - type: web
+    name: sgec-ai
+    runtime: docker
+    dockerfilePath: ./sgec_ai/Dockerfile
+    dockerContext: ./sgec_ai
+    plan: free
