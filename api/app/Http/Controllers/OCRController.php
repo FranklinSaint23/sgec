@@ -10,9 +10,11 @@ class OCRController extends Controller
     public function extract(Request $request)
     {
         $request->validate([
-            'image_base64' => 'required|string',
-            'media_type'   => 'required|string|in:image/jpeg,image/png,image/jpg,image/webp',
-            'type'         => 'required|string|in:cni,acte',
+            'image_base64'        => 'required|string',
+            'media_type'          => 'required|string|in:image/jpeg,image/png,image/jpg,image/webp',
+            'type'                => 'required|string|in:cni,acte',
+            'image_base64_verso'  => 'nullable|string',
+            'media_type_verso'    => 'nullable|string|in:image/jpeg,image/png,image/jpg,image/webp',
         ]);
 
         $apiKey = config('services.groq.api_key');
@@ -23,7 +25,21 @@ class OCRController extends Controller
             : "Tu es un système OCR expert pour les actes d'état civil camerounais. Extrais les informations et retourne UNIQUEMENT un objet JSON avec: nom, date_naiss (YYYY-MM-DD), lieu_naiss, profession, domicile. Réponds uniquement avec le JSON.";
 
         try {
-            $imageUrl = 'data:' . $request->media_type . ';base64,' . $request->image_base64;
+            $contentBlocks = [
+                [
+                    'type'      => 'image_url',
+                    'image_url' => ['url' => 'data:' . $request->media_type . ';base64,' . $request->image_base64],
+                ],
+            ];
+
+            if ($request->filled('image_base64_verso')) {
+                $contentBlocks[] = [
+                    'type'      => 'image_url',
+                    'image_url' => ['url' => 'data:' . $request->media_type_verso . ';base64,' . $request->image_base64_verso],
+                ];
+            }
+
+            $contentBlocks[] = ['type' => 'text', 'text' => $prompt];
 
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $apiKey,
@@ -33,13 +49,7 @@ class OCRController extends Controller
                 'max_tokens' => 256,
                 'messages'   => [[
                     'role'    => 'user',
-                    'content' => [
-                        [
-                            'type'      => 'image_url',
-                            'image_url' => ['url' => $imageUrl],
-                        ],
-                        ['type' => 'text', 'text' => $prompt],
-                    ],
+                    'content' => $contentBlocks,
                 ]],
             ]);
 
