@@ -134,8 +134,10 @@ function AddMariage() {
             <h5>👨 Informations sur l’Époux</h5>
             <OCRUploader type="cni" onExtracted={(data) => setFormData(prev => ({
               ...prev,
-              nom_homme:       data.nom        || prev.nom_homme,
-              date_naiss_homme:data.date_naiss || prev.date_naiss_homme,
+              nom_homme:        data.nom        || prev.nom_homme,
+              date_naiss_homme: data.date_naiss || prev.date_naiss_homme,
+              profession_homme: data.profession || prev.profession_homme,
+              residence_homme:  data.domicile   || prev.residence_homme,
             }))} />
             <label>Nom de l’homme</label>
             <input type="text" name="nom_homme" className="form-control mb-2" value={formData.nom_homme || ''} onChange={handleChange} />
@@ -165,8 +167,10 @@ function AddMariage() {
             <h5>👩 Informations sur l’Épouse</h5>
             <OCRUploader type="cni" onExtracted={(data) => setFormData(prev => ({
               ...prev,
-              nom_femme:       data.nom        || prev.nom_femme,
-              date_naiss_femme:data.date_naiss || prev.date_naiss_femme,
+              nom_femme:        data.nom        || prev.nom_femme,
+              date_naiss_femme: data.date_naiss || prev.date_naiss_femme,
+              profession_femme: data.profession || prev.profession_femme,
+              residence_femme:  data.domicile   || prev.residence_femme,
             }))} />
             <label>Nom de la femme</label>
             <input type="text" name="nom_femme" className="form-control mb-2" value={formData.nom_femme || ''} onChange={handleChange} />

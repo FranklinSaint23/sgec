@@ -149,10 +149,12 @@ function AddDeces() {
             <h5>Informations sur le décédé</h5>
             <OCRUploader type="cni" onExtracted={(data) => setFormData(prev => ({
               ...prev,
-              nom_decede:       data.nom        || prev.nom_decede,
-              date_naiss_decede:data.date_naiss || prev.date_naiss_decede,
-              lieu_naiss_decede:data.lieu_naiss || prev.lieu_naiss_decede,
-              sexe:             data.sexe       || prev.sexe,
+              nom_decede:        data.nom        || prev.nom_decede,
+              date_naiss_decede: data.date_naiss || prev.date_naiss_decede,
+              lieu_naiss_decede: data.lieu_naiss || prev.lieu_naiss_decede,
+              sexe:              data.sexe       || prev.sexe,
+              profession_decede: data.profession || prev.profession_decede,
+              domicile_decede:   data.domicile   || prev.domicile_decede,
             }))} />
             <label htmlFor="nom_decede">Nom du décédé</label>
               <input type="text" name="nom_decede" className="form-control mb-2" value={formData.nom_decede || ''} onChange={handleChange} />

@@ -166,6 +166,7 @@ function AddNaiss() {
               lieu:      data.lieu_naiss || prev.lieu,
               sexe:      data.sexe       || prev.sexe,
             }))} />
+
             <label htmlFor="nom">Nom de l’enfant</label>
               <input type="text" name="nom" className="form-control mb-3" value={formData.nom || ""} onChange={handleChange} />
             <label htmlFor="date_naiss">Date et heure de naissance</label>
@@ -190,6 +191,14 @@ function AddNaiss() {
         return (
           <>
             <h5>Informations sur le père</h5>
+            <OCRUploader type="cni" onExtracted={(data) => setFormData(prev => ({
+              ...prev,
+              nom_pere:        data.nom        || prev.nom_pere,
+              date_naiss_pere: data.date_naiss || prev.date_naiss_pere,
+              lieu_naiss_pere: data.lieu_naiss || prev.lieu_naiss_pere,
+              domicile_pere:   data.domicile   || prev.domicile_pere,
+              profession_pere: data.profession || prev.profession_pere,
+            }))} />
             <label htmlFor="nom_pere">Nom du père</label>
               <input type="text" name="nom_pere" className="form-control mb-2" value={formData.nom_pere || ""} onChange={handleChange} />
             <label htmlFor="">Lieu de naissance du père</label>
@@ -207,6 +216,14 @@ function AddNaiss() {
         return (
           <>
             <h5>Informations sur la mère</h5>
+            <OCRUploader type="cni" onExtracted={(data) => setFormData(prev => ({
+              ...prev,
+              nom_mere:        data.nom        || prev.nom_mere,
+              date_naiss_mere: data.date_naiss || prev.date_naiss_mere,
+              lieu_naiss_mere: data.lieu_naiss || prev.lieu_naiss_mere,
+              domicile_mere:   data.domicile   || prev.domicile_mere,
+              profession_mere: data.profession || prev.profession_mere,
+            }))} />
             <label htmlFor="nom_mere">Nom de la mère</label>
               <input type="text" name="nom_mere" className="form-control mb-2" value={formData.nom_mere || ""} onChange={handleChange} />
             <label>Lieu de naissance de la mère</label>

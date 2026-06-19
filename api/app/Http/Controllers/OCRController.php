@@ -19,8 +19,8 @@ class OCRController extends Controller
         $model  = config('services.groq.model_vision');
 
         $prompt = $request->type === 'cni'
-            ? "Tu es un système OCR expert pour les CNI camerounaises. Extrais les informations de cette image et retourne UNIQUEMENT un objet JSON valide avec les clés: nom (nom complet en majuscules), date_naiss (format YYYY-MM-DD ou null), lieu_naiss (lieu de naissance ou null), sexe (M ou F ou null). Si une information est illisible, mets null. Réponds uniquement avec le JSON, aucun texte autour."
-            : "Tu es un système OCR expert pour les actes d'état civil camerounais. Extrais les informations et retourne UNIQUEMENT un objet JSON avec: nom, date_naiss (YYYY-MM-DD), lieu_naiss. Réponds uniquement avec le JSON.";
+            ? "Tu es un système OCR expert pour les CNI camerounaises. Extrais les informations de cette image et retourne UNIQUEMENT un objet JSON valide avec les clés: nom (nom complet en majuscules), date_naiss (format YYYY-MM-DD ou null), lieu_naiss (lieu de naissance ou null), sexe (M ou F ou null), profession (profession ou null), domicile (adresse de résidence ou null). Si une information est illisible, mets null. Réponds uniquement avec le JSON, aucun texte autour."
+            : "Tu es un système OCR expert pour les actes d'état civil camerounais. Extrais les informations et retourne UNIQUEMENT un objet JSON avec: nom, date_naiss (YYYY-MM-DD), lieu_naiss, profession, domicile. Réponds uniquement avec le JSON.";
 
         try {
             $imageUrl = 'data:' . $request->media_type . ';base64,' . $request->image_base64;
