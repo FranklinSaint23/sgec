@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import api from "../services/api";
 
-function OCRUploader({ onExtracted, type = "cni", label = null }) {
+function OCRUploader({ onExtracted, type = "cni" }) {
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(null);
   const fileRef = useRef();
@@ -38,8 +38,8 @@ function OCRUploader({ onExtracted, type = "cni", label = null }) {
   return (
     <div className="mb-3 p-3 border rounded bg-white" style={{ borderStyle: "dashed" }}>
       <div className="d-flex align-items-center gap-2 mb-2">
-        <span className="fw-bold text-primary small">{label || "🔍 Scan automatique IA"}</span>
-        {!label && <small className="text-muted">Photographiez un document pour pré-remplir</small>}
+        <span className="fw-bold text-primary small">🔍 Scan automatique IA</span>
+        <small className="text-muted">Photographiez un document pour pré-remplir</small>
       </div>
       <input
         ref={fileRef}

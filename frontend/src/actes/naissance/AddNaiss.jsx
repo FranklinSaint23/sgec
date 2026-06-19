@@ -288,29 +288,6 @@ function AddNaiss() {
           <h3 className="mb-3">🚼 Déclarer une naissance</h3>
         </div>
 
-        {/* Scanner global : remplit tous les champs enfant + père + mère en une seule fois */}
-        <OCRUploader
-          type="naissance_complete"
-          label="📄 Scanner un document complet (enfant + père + mère)"
-          onExtracted={(data) => setFormData(prev => ({
-            ...prev,
-            nom:             data.nom             || prev.nom,
-            date_naiss:      data.date_naiss       || prev.date_naiss,
-            lieu:            data.lieu             || prev.lieu,
-            sexe:            data.sexe             || prev.sexe,
-            nom_pere:        data.nom_pere         || prev.nom_pere,
-            date_naiss_pere: data.date_naiss_pere  || prev.date_naiss_pere,
-            lieu_naiss_pere: data.lieu_naiss_pere  || prev.lieu_naiss_pere,
-            domicile_pere:   data.domicile_pere    || prev.domicile_pere,
-            profession_pere: data.profession_pere  || prev.profession_pere,
-            nom_mere:        data.nom_mere         || prev.nom_mere,
-            date_naiss_mere: data.date_naiss_mere  || prev.date_naiss_mere,
-            lieu_naiss_mere: data.lieu_naiss_mere  || prev.lieu_naiss_mere,
-            domicile_mere:   data.domicile_mere    || prev.domicile_mere,
-            profession_mere: data.profession_mere  || prev.profession_mere,
-          }))}
-        />
-
         <div className="mb-4">
           <div className="d-flex justify-content-between">
             <small>Étape {step} / {totalSteps}</small>
